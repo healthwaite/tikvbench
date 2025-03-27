@@ -15,9 +15,10 @@ some scripts to spin up a TiKV cluster and then benchmark it using go-ycsb.
    modify `num_client_nodes` and `num_db_nodes` in `./scripts/label_node.sh`.
    You'll also need to modify the number of tikv replicas in `k8s/tikv/tikv-cluster.yaml`
    and `num_tikv_nodes` in `scripts/deploy_tikv.sh`.
-2. To achieve the best peformance you want to be using local disks. These
-   scripts expect that you have created a storage class called `ssd-storage`
-   which is backed by the local disks. You can do this using the [Local Peristence Volume Static Provisioner](https://github.com/kubernetes-sigs/sig-storage-local-static-provisioner#local-persistence-volume-static-provisioner),
+2. To achieve the best peformance you want to be using fast node-local disks.
+   These scripts expect that you have created a storage class called
+   `ssd-storage` which is backed by the local disks. You can do this using the
+   [Local Peristence Volume Static Provisioner](https://github.com/kubernetes-sigs/sig-storage-local-static-provisioner#local-persistence-volume-static-provisioner),
    for example.
 
 ## Installing the TiKV cluster
@@ -76,7 +77,7 @@ basic   True    pingcap/pd:v7.1.2   100Gi     2       2        pingcap/tikv:v7.1
 
 ## Accessing the Grafana
 
-To access the TiKV grafana instance which comes with all the preinstalled
+To access the TiKV grafana instance which comes with all the pre-installed
 dashboards run the following command:
 
 ```
@@ -102,11 +103,11 @@ NAME      READY   AGE
 kvbench   15/15   42m
 ```
 
-Before running a benchmark it's sensible to preload some keys. You can do this
-with the `./demo/load.sh` script. The script loads 10 billion keys by default
-but you can modify this by changing the `TOTAL_KEYS` variable. It's safe to
-CTRL-C the script once you've started. The key load will continue in the
-background:
+Before running a benchmark it's we need to to pre-load some keys. You can do
+this with the `./demo/load.sh` script. The script loads 10 billion keys by
+default but you can modify this by changing the `TOTAL_KEYS` variable. It's safe
+to CTRL-C the script once it has started loading the keys. The key load will
+continue in the background. Loading 10 billion keys will take a few hours.
 
 ```
 $ ./demo/load.sh
@@ -136,8 +137,7 @@ $ ./demo/load.sh
 ...
 ```
 
-If you want to kill the key loading at anypoint you can run
-`./demo/scripts/run_benchmark.py --pkill`.
+If you want to kill the key loading at anypoint you can run `./demo/scripts/run_benchmark.py --pkill`.
 
 Keep an eye on the grafana dashboard to see when key loading has finished.
 The easiest thing to do is look at `Cluster-TiKV-Details > RocksDB - kv >
@@ -190,3 +190,13 @@ $ go run main.go --dir /results/kvbench-20250327-170837/bench-read
 numclients15_numthreads800_readbench-read_target10000 READ: ave: 4 p50: 0 p90 0 p99: 178 total_time: 9 rps: 9992 num_errors: 13 (0.01%)
 numclients15_numthreads800_readbench-read_target10000 TOTAL: 9992 RPS
 ```
+
+## Deleting the TiKV cluster
+
+To delete the TiKV cluster and monitoring stack run:
+
+```
+$ ./scripts/delete_tikv.sh
+```
+
+WARNING: this removes the data as well as the cluster.
