@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kvbench
+spec:
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Delete
+  replicas: 15
+  selector:
+    matchLabels:
+      app: kvbench
+  template:
+    metadata:
+      labels:
+        app: kvbench
+      name: kvbench
+    spec:
+      nodeSelector:
+        node-role.kubernetes.io/benchmark-client: "true" # Remove if you want clients to be able to run anywhere
+      containers:
+      - name: client
+        image: healthwaite/kvbench:0edd3921-20230519-135139
+        imagePullPolicy: Always
+        command: ["sleep","999999999d"]
+        volumeMounts:
+        - mountPath: /data
+          name: data
+      terminationGracePeriodSeconds: 0
+  # PVC is optional: it's only required if you are storing the benchmark run csv files
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ssd-storage
+      resources:
+        requests:
+          storage: 100Gi

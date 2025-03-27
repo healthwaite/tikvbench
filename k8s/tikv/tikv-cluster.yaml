@@ -1,0 +1,83 @@
+# IT IS NOT SUITABLE FOR PRODUCTION USE.
+# This YAML describes a basic TiDB cluster with minimum resource requirements,
+# which should be able to run in any Kubernetes cluster with storage support.
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+metadata:
+  name: basic
+  namespace: tikv-cluster
+spec:
+  version: v7.1.2
+  timezone: UTC
+  pvReclaimPolicy: Retain
+  enableDynamicConfiguration: true
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  helper:
+    image: alpine:3.16.0
+  pd:
+    baseImage: pingcap/pd
+    replicas: 2
+    storageClassName: ssd-storage
+    requests:
+      storage: "100Gi"
+    config: |
+      [replication]
+        max-replicas = 5
+        # max-pending-peer-count, max-snapshot-count and replica-schedule-limit are
+        # 64 by default. This seems to give slow rebuild times when we have a double
+        # node failure. Bumping them up to 64 seems to improve matters.
+        max-pending-peer-count = 256
+        max-snapshot-count = 256
+        replica-schedule-limit = 256
+    # Force pd's to run on different nodes to TiKV
+    nodeSelector:
+      node-role.kubernetes.io/pd: "true"
+  tikv:
+    baseImage: pingcap/tikv
+    replicas: 12
+    storageClassName: ssd-storage
+    requests:
+      storage: "500Gi"
+    config: |
+      [log]
+        format = "json"
+      [log.file]
+        filename = "/var/lib/tikv/log.json"
+      [rocksdb]
+        max-open-files = 50000
+      [rocksdb.defaultcf]
+        dynamic-level-bytes = false # Seems to stop compaction being less so lazy
+        block-size = "4KB"
+      [rocksdb.writecf]
+        dynamic-level-bytes = false # Seems to stop compaction being less so lazy
+        block-size = "4KB"
+      [raftdb]
+        max-open-files = 50000
+      [readpool.unified]
+        max-thread-count = 32
+      [server]
+        grpc-concurrency = 8 #default is 5
+
+    nodeSelector:
+      node-role.kubernetes.io/tikv: "true"
+
+    affinity:
+      # Don't schedule TiKV pods on the same node
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/component
+              operator: In
+              values:
+              - tikv
+          topologyKey: kubernetes.io/hostname
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: node-role.kubernetes.io/tikv
+              operator: In
+              values:
+              - "true"

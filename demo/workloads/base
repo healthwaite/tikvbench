@@ -1,0 +1,14 @@
+workload=core
+
+# key size is 17B so that gives us a key value size of 27B
+fieldlength=10
+fieldcount=1
+
+# Random
+requestdistribution=uniform
+
+batch.size=1
+tikv.pd=basic-pd.tikv-cluster:2379
+tikv.type=raw
+tikv.conncount=128
+tikv.batchsize=128
