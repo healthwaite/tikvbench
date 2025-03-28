@@ -282,10 +282,13 @@ func main() {
 	}
 
 	fmt.Printf("### Benchmark %v\n", benchConfig)
-	fmt.Printf("### Starting at %s\n", startTime)
+	fmt.Printf("### Started at %s\n", startTime)
 	fmt.Printf("### Num clients: %s\n", benchConfig["num_clients"])
 	fmt.Printf("### Num threads: %s\n", benchConfig["num_threads"])
+	fmt.Printf("### Batch size: %s\n", benchConfig["batch_size"])
 	fmt.Printf("### Target RPS: %s\n", benchConfig["target"])
+	fmt.Printf("### Duration: %s\n", benchConfig["duration"])
+	fmt.Println()
 
 	// Open the file in append mode, create it if it doesn't exist
 	csvFile, err := os.OpenFile("results.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -322,13 +325,12 @@ func main() {
 		nonErrors := len(latencies)
 		percErrors := 100.0 * float64(errors) / (float64(nonErrors + errors))
 
-		fmt.Printf("%s %s: ave: %d p50: %d p90 %d p99: %d total_time: %d rps: %d num_errors: %d (%.2f%%)\n", benchName, opAsString(op), ave/1000, median/1000, p90/1000, p99/1000, timeDiffSecs, rps, allResults.NumErrors[op], percErrors)
+		fmt.Printf("### %s: ave_lat: %d ms, p50_lat: %d ms, p90_lat: %d ms, p99_lat: %d ms, total_time: %d RPS: %d num_errors: %d (%.2f%%)\n", opAsString(op), ave/1000, median/1000, p90/1000, p99/1000, timeDiffSecs, rps, allResults.NumErrors[op], percErrors)
 
 		csv += fmt.Sprintf("%d,%d,%d,%d,%d,", rps, ave/1000, median/1000, p90/1000, p99/1000)
 	}
 
-	fmt.Printf("%s TOTAL: %d RPS\n", benchName, totalRps)
-	fmt.Printf("%s\n", csv[0:len(csv)-1])
+	fmt.Printf("### TOTAL: %d RPS\n", totalRps)
 	if _, err := csvFile.WriteString(fmt.Sprintf("%s\n", csv[0:len(csv)-1])); err != nil {
 		fmt.Printf("Failed to write to csv file: %v\n", err)
 		os.Exit(1)
