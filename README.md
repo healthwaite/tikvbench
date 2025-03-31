@@ -15,6 +15,9 @@ go-ycsb.
 modify `num_client_nodes` and `num_db_nodes` in `./scripts/label_node.sh`.
 You'll also need to modify the number of tikv replicas in
 `k8s/tikv/tikv-cluster.yaml` and `num_tikv_nodes` in `scripts/deploy_tikv.sh`.
+This repo was initally tested using a 20 node [Linode Kubernetes
+Engine](https://techdocs.akamai.com/cloud-computing/docs/linode-kubernetes-engine)
+cluster.
 2. To achieve the best peformance you want to be using fast node-local disks.
    This repo expects that you have created a storage class called `ssd-storage`
 which is backed by local disks. The easiest way to do this is to use the [Local

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-set -x
 
 pushd go-ycsb
 
@@ -12,7 +11,7 @@ if [[ ! -z "$(git status -s)" ]]; then
 fi
 
 if [[ -z ${DOCKER_REPOSITORY} ]]; then
-  echo "You must set DOCKER_REPOSITORY"
+  echo "You must set DOCKER_REPOSITORY to the name of your docker repository"
   exit 1
 fi
 
